@@ -1,0 +1,63 @@
+# Blue Deployment (Active)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-blue-green-demo-blue
+  namespace: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argocd-blue-green-demo
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: argocd-blue-green-demo
+        version: blue
+    spec:
+      containers:
+      - name: argocd-blue-green-demo
+        image: joelwembo/argocd_blue_green_demo:latest
+        ports:
+        - containerPort: 5000
+---
+# Green Deployment (Inactive)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-blue-green-demo-green
+  namespace: argocd
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: argocd-blue-green-demo
+      version: green
+  template:
+    metadata:
+      labels:
+        app: argocd-blue-green-demo
+        version: green
+    spec:
+      containers:
+      - name: argocd-blue-green-demo
+        image: joelwembo/argocd_blue_green_demo:latest
+        ports:
+        - containerPort: 5000
+---
+# Service selecting the blue deployment by default
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-blue-green-demo-service
+  namespace: argocd
+spec:
+  type: LoadBalancer
+  selector:
+    app: argocd-blue-green-demo
+    version: blue
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
